@@ -1,0 +1,6 @@
+.gitignore
+.github
+.history
+node_modules
+*.txt
+*.md
