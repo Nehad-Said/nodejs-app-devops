@@ -1,109 +1,146 @@
+# Todo-List Node.js Application with DevOps Automation
 
-## Documentation
+## Project Overview
 
-[Documentation](https://linktodocumentation)
+This repository contains a **Todo-List** web application built with Node.js, Express, EJS templating, and MongoDB for data persistence. The application allows users to create, update, and delete tasks with a user-friendly interface.
 
-📝 To-Do List nodeJs
+This project has been adapted and extended to include DevOps automation covering containerization, CI/CD pipelines, infrastructure provisioning, and deployment automation as part of a DevOps Internship Assessment.
 
-The to-do list application is a web-based application that allows users to create and manage a list of tasks. The user interface consists of a form to add new tasks, a list of all tasks, and controls to mark tasks as complete or delete them.
+---
 
-To create the application, Node.js is used to set up the server and handle the logic of the application. Express.js is used to create the routes for the application, allowing the user to interact with the application through a web browser. EJS is used to create the views for the application, allowing the user to see the list of tasks and the form to add new tasks. CSS is used to style the application, making it visually appealing and easy to use.
+## Assessment Breakdown & Solution Outline
 
-MongoDB and Mongoose are used to store the tasks in a database, allowing the user to add, delete, and update tasks as needed. Nodemon is used to monitor changes to the code and automatically restart the server, making it easy to develop and test the application.
+### Part 1: Dockerize & CI Pipeline (30 points)
+- **Repository:** [Original Todo-List-nodejs repo](https://github.com/Ankit6098/Todo-List-nodejs)
+- **MongoDB Setup:** The app connects to your own MongoDB database (configured via `.env` file).
+- **Dockerization:** The Node.js app is containerized with a Dockerfile.
+- **CI Pipeline:** GitHub Actions workflow builds the Docker image and pushes it to a private Docker Registry (e.g., AWS ECR or Docker Hub).
 
-When the user adds a new task using the form, Node.js and Express.js handle the request and store the task in the database using Mongoose. When the user views the list of tasks, EJS displays the tasks from the database in a list on the web page. When the user marks a task as complete or deletes a task, Node.js and Express.js handle the request and update the database using Mongoose.
+### Part 2: VM Provisioning & Configuration with Ansible (30 points)
+- **Linux VM:** Created locally or in the cloud.
+- **Ansible Automation:** Ansible playbooks configure the VM, install Docker, and prepare the environment for container deployment.
+- **Remote Execution:** Ansible runs from the local machine targeting the VM via SSH.
 
-Overall, the todo list application using Node.js, Express.js, EJS, CSS, JavaScript, MongoDB, Mongoose, and Nodemon can be a great way to create a functional and interactive web application that allows users to manage their tasks online. With the right combination of technologies, it is possible to create an application that is both functional and aesthetically pleasing, making it easy for users to manage their tasks in a convenient and efficient way.
+### Part 3: Container Orchestration & Auto-Update (40 points)
+- **Docker Compose:** Used on the VM to run the application container.
+- **Health Checks:** Configured in `docker-compose.yml` to monitor container health.
+- **Image Auto-Update:** Continuous monitoring of the private Docker registry for updates to the image. Upon detection, the VM pulls the new image and restarts the container.  
 
-Technologies Used: NodeJS, ExpressJS, EJS, CSS, JavaScript, Nodemon, MongoDB, Mongoose.
-## Demo
+### Part 4 - Bonus: Kubernetes & CD with ArgoCD 
+- **Kubernetes:** Deploy the containerized application on the VM using Kubernetes instead of Docker Compose.
+- **Continuous Deployment:** Use ArgoCD to automate the deployment workflow to the Kubernetes cluster for real-time updates from the image registry.
 
-Under process...
-## Authors
+---
 
-- [@AnkitVishwakarma](https://github.com/Ankit6098)
+## Project Architecture
 
++-------------------+ +-------------------------+ +------------------------+
+| Developer Machine | | CI/CD Pipeline on GitHub| | Cloud/Local Linux VM |
+| (Local Dev & Git) +------------>+ GitHub Actions Workflow +------------>+ Docker & Orchestration |
++-------------------+ +-------------------------+ +------------------------+
+| | |
+| Source code & Dockerfile | Builds Docker image | Runs container
+| | Pushes image to private registry (e.g., ECR) |
+v v v
+MongoDB database Docker Registry (AWS ECR or Docker Hub) Docker Compose or Kubernetes
 
-## Features
+---
 
-- Create, Update, and Delete Tasks: Enable users to create new tasks, update existing tasks (e.g., mark as completed, edit task details), and delete tasks they no longer need.
-- Task Categories provides Implement the ability for users to categorize their tasks into different categories (e.g., work, personal, shopping) or assign labels/tags to tasks for better organization and filtering.
-- MongoDb to store your the user data
-## Run Locally
+## File Structure Summary
 
-Clone the project
+.
+├── .github/
+│ └── workflows/
+│ └── ci-workflow.yaml # GitHub Actions workflow for CI pipeline
+├── ansible/
+│ ├── inventory # Defines target VM(s)
+│ ├── playbook.yml # Ansible playbook for provisioning & setup
+│ └── roles/ # Ansible roles for Docker and other dependencies
+├── docker-compose.yml # Docker Compose file for local/VM deployment
+├── Dockerfile # Docker instructions to containerize Node.js app
+├── src/ # Source code of the Todo List app
+├── .env # Environment variables including MongoDB URI
+├── README.md # This file
 
-```bash
-  git clone https://github.com/Ankit6098/Todos-nodejs
-```
+---
 
-Go to the project directory and open index.html file
+## How to Use / Steps to Run
 
-```bash
-  cd Todos-nodejs
-```
+### 1. Clone Repo and Configure MongoDB
 
-Install the packages
+git clone https://github.com/Ankit6098/Todo-List-nodejs.git
+cd Todo-List-nodejs
 
-```bash
-  npm install / npm i
-```
+text
 
-Start the Server
+- Create and configure your own MongoDB database.
+- Update the `.env` file with your MongoDB connection URI.
 
-```bash
-    npm start / nodemon start
-```
-## Acknowledgements
+### 2. Dockerize the Application
 
- - [nodemon](https://nodemon.io/)
- - [mongoDb](https://www.mongodb.com/)
- - [mongoose](https://mongoosejs.com/)
+- The `Dockerfile` builds the container with Node.js and app dependencies.
+- Build and test the Docker image locally.
 
+### 3. Set Up GitHub Actions CI Pipeline
 
-## Screenshots
+- Configure GitHub Secrets for accessing your private Docker registry and AWS credentials (if using ECR).
+- Workflow in `.github/workflows/ci-workflow.yaml` builds the Docker image and pushes it on every push to `main`.
 
-![225232515-4c100b6b-52e4-40f8-a6d4-85e30dc2f5e7](https://github.com/Ankit6098/Todos-nodejs/assets/92246613/487f548f-7ca6-4183-9443-c88c9f79c3f0)
-![225232960-da554f1f-ba4a-41f8-9856-edaebe339d76](https://github.com/Ankit6098/Todos-nodejs/assets/92246613/25515d2e-1d72-498d-8044-59a01c6b9127)
-![225238829-05433362-5b16-454c-92d5-5e536fe6912e](https://github.com/Ankit6098/Todos-nodejs/assets/92246613/316d15ca-1fe8-4581-80b1-fc316340bba6)
-![225239140-226f8eae-d8b8-4055-8a68-d85d523c2422](https://github.com/Ankit6098/Todos-nodejs/assets/92246613/44a0c418-449e-446f-8a8e-3c4e14fca8bf)
-![225239221-caf86f3d-ef17-4d18-80a6-c72123ff5444](https://github.com/Ankit6098/Todos-nodejs/assets/92246613/2ee90ab0-95d4-44f4-80ac-b17b088ac1ce)
-![225239406-98b7ba7d-df97-4d27-bb66-596a32187d87](https://github.com/Ankit6098/Todos-nodejs/assets/92246613/960ff353-1ce9-4ef8-94e4-10af09184fd2)
-![225239841-4b5d77f0-4a54-4339-b6b3-b6a1be6776b5](https://github.com/Ankit6098/Todos-nodejs/assets/92246613/f5ffc3b8-480f-4d11-9a0b-c469e3c17e8e)
+### 4. Provision & Configure Linux VM with Ansible
 
+- Create a Linux VM locally or in the cloud.
+- Use the provided Ansible playbooks (`ansible/playbook.yml`) run from your local machine to:
+  - Install Docker & Docker Compose.
+  - Configure the environment for app deployment.
+- Inventory file defines your VM's IP and SSH credentials.
 
-## Related
+### 5. Deploy & Manage Your App on the VM
 
-Here are some other projects
+- Use `docker-compose.yml` to run the app container on the VM.
+- Docker Compose file includes health check configurations.
+- Use a tool like **Watchtower** for monitoring image changes and automatic updates.
 
-[Alarm CLock - javascript](https://github.com/Ankit6098/Todos-nodejs)\
-[IMDb Clone - javascript](https://github.com/Ankit6098/IMDb-Clone)
+### 6. Bonus: Kubernetes & ArgoCD (Optional)
 
+- Replace Docker Compose with Kubernetes manifests to deploy the app.
+- Use ArgoCD for continuous deployment from your Git repo to Kubernetes cluster.
 
-## 🚀 About Me
-I'm a full stack developer...
+---
 
+## Technologies & Tools Used
 
-# Hi, I'm Ankit! 👋
+| Area                  | Technology                                       |
+|-----------------------|------------------------------------------------|
+| Backend               | Node.js, Express.js                             |
+| Database              | MongoDB, Mongoose                              |
+| Containerization      | Docker, Docker Compose                          |
+| CI/CD                 | GitHub Actions                                 |
+| Cloud Platform        | AWS (for ECR registry, optional)               |
+| Infrastructure as Code| Ansible                                        |
+| Container Orchestration| Docker Compose, Kubernetes (optional bonus)   |
+| Continuous Deployment  | ArgoCD (optional bonus)                         |
 
-I'm a full stack developer 😎 ... Love to Develop Classic Unique fascinating and Eye Catching UI and Love to Create Projects and Building logics.
-## 🔗 Links
-[![portfolio](https://img.shields.io/badge/my_portfolio-000?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ankithub.me/Resume/)
+---
 
-[![linkedin](https://img.shields.io/badge/linkedin-0A66C2?style=for-the-badge&logo=linkedin&logoColorwhite=)](https://www.linkedin.com/in/ankit-vishwakarma-6531221b0/)
+## Additional Notes
 
+- Ensure your AWS IAM user or Docker registry account has correct permissions to push images.
+- Maintain security by storing sensitive keys in GitHub Secrets.
+- Consider tagging docker images using Git SHA or semantic versioning for better tracking.
+- Health checks in Docker Compose improve container reliability.
+- For image auto-update, **Watchtower** is a popular and easy-to-use solution, but other tools like Kubernetes operators or custom scripts can be used depending on complexity.
+- Kubernetes and ArgoCD require additional cluster setup and configuration beyond the scope of traditional Docker Compose.
 
-## Other Common Github Profile Sections
-🧠 I'm currently learning FullStack Developer Course from Coding Ninjas
+---
 
-📫 How to reach me ankitvis609@gmail.com
+## References and Resources
 
+- [Todo-List-nodejs original repo](https://github.com/Ankit6098/Todo-List-nodejs)
+- [Dockerizing Node.js & MongoDB - Tutorials](https://hevodata.com/learn/docker-nodejs-mongodb/)
+- [GitHub Actions for Docker CI/CD](https://github.com/aws-actions/configure-aws-credentials)
+- [Ansible documentation](https://docs.ansible.com/)
+- [Watchtower - Automatic Docker Container Updater](https://github.com/containrrr/watchtower)
+- [Kubernetes & ArgoCD Docs](https://argo-cd.readthedocs.io/en/stable/)
 
-## 🛠 Skills
-React, Java, Javascript, HTML, CSS, Nodejs, ExpressJs, Mongodb, Mongoose...
-
-
-## Feedback
-
-If you have any feedback, please reach out to us at ankitvis609@gmail.com
+---
 
