@@ -6,25 +6,27 @@ on:
   workflow_dispatch:
 
 jobs:
-
   build:
     name: Build image
     runs-on: ubuntu-latest
     
     steps:
     - name: Check out code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: eu-central-1
+        aws-region: us-east-1  # Make sure this matches your manual push region
 
     - name: Login to Amazon ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Debug ECR Registry Output
+      run: echo "ECR Registry: ${{ steps.login-ecr.outputs.registry }}"
 
     - name: Build, tag, and push image to Amazon ECR
       env:
@@ -34,3 +36,4 @@ jobs:
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
