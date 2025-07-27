@@ -1,146 +1,108 @@
-# Todo-List Node.js Application with DevOps Automation
+⚙️ DevOps Architecture
+mermaid
+Copy
+Edit
+flowchart TD
+    subgraph Developer Laptop
+        A1[Code Commit] -->|Triggers| GH[GitHub Actions]
+    end
 
-## Project Overview
+    subgraph GitHub
+        GH -->|Builds Docker Image| CI[CI Pipeline]
+        CI -->|Push to Registry| REG[Private Docker Registry]
+        GH -->|Sync App Manifests| GIT[GitOps Repo]
+    end
 
-This repository contains a **Todo-List** web application built with Node.js, Express, EJS templating, and MongoDB for data persistence. The application allows users to create, update, and delete tasks with a user-friendly interface.
+    subgraph Cloud Infrastructure (EC2)
+        VM[EC2 Instance (Ubuntu)]
+        VM -->|Provision| Ansible[Ansible]
+        VM -->|Run on K8s| K8s[Kubernetes Cluster]
+    end
 
-This project has been adapted and extended to include DevOps automation covering containerization, CI/CD pipelines, infrastructure provisioning, and deployment automation as part of a DevOps Internship Assessment.
+    GIT -->|Monitors Git Repo| Argo[ArgoCD]
+    REG -->|Checks for Image Tags| Updater[ArgoCD Image Updater]
 
----
+    Updater -->|Update app manifests| GIT
+    Argo -->|Sync app to K8s| K8s
+🛠️ Workflow Breakdown
+✅ Part 1 – CI Pipeline (GitHub Actions)
+Trigger on push to main
 
-## Assessment Breakdown & Solution Outline
+Build Docker image
 
-### Part 1: Dockerize & CI Pipeline (30 points)
-- **Repository:** [Original Todo-List-nodejs repo](https://github.com/Ankit6098/Todo-List-nodejs)
-- **MongoDB Setup:** The app connects to your own MongoDB database (configured via `.env` file).
-- **Dockerization:** The Node.js app is containerized with a Dockerfile.
-- **CI Pipeline:** GitHub Actions workflow builds the Docker image and pushes it to a private Docker Registry (e.g., AWS ECR or Docker Hub).
+Push to private Docker registry (AWS ECR)
 
-### Part 2: VM Provisioning & Configuration with Ansible (30 points)
-- **Linux VM:** Created locally or in the cloud.
-- **Ansible Automation:** Ansible playbooks configure the VM, install Docker, and prepare the environment for container deployment.
-- **Remote Execution:** Ansible runs from the local machine targeting the VM via SSH.
 
-### Part 3: Container Orchestration & Auto-Update (40 points)
-- **Docker Compose:** Used on the VM to run the application container.
-- **Health Checks:** Configured in `docker-compose.yml` to monitor container health.
-- **Image Auto-Update:** Continuous monitoring of the private Docker registry for updates to the image. Upon detection, the VM pulls the new image and restarts the container.  
+✅ Part 2 – Provision EC2 VM
+Launch EC2 (Ubuntu)
 
-### Part 4 - Bonus: Kubernetes & CD with ArgoCD 
-- **Kubernetes:** Deploy the containerized application on the VM using Kubernetes instead of Docker Compose.
-- **Continuous Deployment:** Use ArgoCD to automate the deployment workflow to the Kubernetes cluster for real-time updates from the image registry.
+Run Ansible from local:
 
----
+Install Docker
 
-## Project Architecture
+Install kubeadm, kubectl, kubelet
 
-+-------------------+ +-------------------------+ +------------------------+
-| Developer Machine | | CI/CD Pipeline on GitHub| | Cloud/Local Linux VM |
-| (Local Dev & Git) +------------>+ GitHub Actions Workflow +------------>+ Docker & Orchestration |
-+-------------------+ +-------------------------+ +------------------------+
-| | |
-| Source code & Dockerfile | Builds Docker image | Runs container
-| | Pushes image to private registry (e.g., ECR) |
-v v v
-MongoDB database Docker Registry (AWS ECR or Docker Hub) Docker Compose or Kubernetes
+Set up a single-node Kubernetes cluster
 
----
+Install ArgoCD and ArgoCD Image Updater
 
-## File Structure Summary
+✅ Part 3 – CD with ArgoCD + Auto Update with Image Updater
+ArgoCD watches Git repo and applies Kubernetes manifests
 
-.
-├── .github/
-│ └── workflows/
-│ └── ci-workflow.yaml # GitHub Actions workflow for CI pipeline
-├── ansible/
-│ ├── inventory # Defines target VM(s)
-│ ├── playbook.yml # Ansible playbook for provisioning & setup
-│ └── roles/ # Ansible roles for Docker and other dependencies
-├── docker-compose.yml # Docker Compose file for local/VM deployment
-├── Dockerfile # Docker instructions to containerize Node.js app
-├── src/ # Source code of the Todo List app
-├── .env # Environment variables including MongoDB URI
-├── README.md # This file
+ArgoCD Image Updater monitors AWS ECR
 
----
+When new image version is pushed:
 
-## How to Use / Steps to Run
+Image Updater patches deployment manifest 
 
-### 1. Clone Repo and Configure MongoDB
+Commits it to Git or updates it directly in K8s 
 
-git clone https://github.com/Ankit6098/Todo-List-nodejs.git
-cd Todo-List-nodejs
+ArgoCD syncs the updated workload
 
-text
+🔁 CI/CD Flow Summary
+Developer pushes code → GitHub
 
-- Create and configure your own MongoDB database.
-- Update the `.env` file with your MongoDB connection URI.
+GitHub Actions:
 
-### 2. Dockerize the Application
+Builds Docker image
 
-- The `Dockerfile` builds the container with Node.js and app dependencies.
-- Build and test the Docker image locally.
+Tags and pushes image to registry
 
-### 3. Set Up GitHub Actions CI Pipeline
 
-- Configure GitHub Secrets for accessing your private Docker registry and AWS credentials (if using ECR).
-- Workflow in `.github/workflows/ci-workflow.yaml` builds the Docker image and pushes it on every push to `main`.
+ArgoCD Image Updater:
 
-### 4. Provision & Configure Linux VM with Ansible
+Detects new image
 
-- Create a Linux VM locally or in the cloud.
-- Use the provided Ansible playbooks (`ansible/playbook.yml`) run from your local machine to:
-  - Install Docker & Docker Compose.
-  - Configure the environment for app deployment.
-- Inventory file defines your VM's IP and SSH credentials.
+Updates K8s manifest
 
-### 5. Deploy & Manage Your App on the VM
+ArgoCD:
 
-- Use `docker-compose.yml` to run the app container on the VM.
-- Docker Compose file includes health check configurations.
-- Use a tool like **Watchtower** for monitoring image changes and automatic updates.
+Syncs updated manifests to Kubernetes cluster
 
-### 6. Bonus: Kubernetes & ArgoCD (Optional)
+App is redeployed with new image
 
-- Replace Docker Compose with Kubernetes manifests to deploy the app.
-- Use ArgoCD for continuous deployment from your Git repo to Kubernetes cluster.
+💡 Technologies & Justification
+Tool	Purpose	Reason
+Backend	Node.js, Express.js
+Database	MongoDB, Mongoose
+Containerization	Docker, Docker Compose
+GitHub Actions	CI	Native, easy to integrate
+Docker Registry	Store built images	Use ECR
+Ansible	Provision EC2	Agentless, powerful automation
+Kubernetes	Deployment environment	Scalable and production-ready
+ArgoCD	Continuous Delivery	GitOps-based, easy rollback/sync
+ArgoCD Image Updater	Auto image pull	Clean, native Argo integration
 
----
+Additional Notes
+Ensure your AWS IAM user and ECR has correct permissions to push images.
+Maintain security by storing sensitive keys in GitHub Secrets.
+Consider tagging docker images using Git SHA or semantic versioning for better tracking.
+Kubernetes and ArgoCD require additional cluster setup and configuration beyond the scope of traditional Docker Compose.
 
-## Technologies & Tools Used
-
-| Area                  | Technology                                       |
-|-----------------------|------------------------------------------------|
-| Backend               | Node.js, Express.js                             |
-| Database              | MongoDB, Mongoose                              |
-| Containerization      | Docker, Docker Compose                          |
-| CI/CD                 | GitHub Actions                                 |
-| Cloud Platform        | AWS (for ECR registry, optional)               |
-| Infrastructure as Code| Ansible                                        |
-| Container Orchestration| Docker Compose, Kubernetes (optional bonus)   |
-| Continuous Deployment  | ArgoCD (optional bonus)                         |
-
----
-
-## Additional Notes
-
-- Ensure your AWS IAM user or Docker registry account has correct permissions to push images.
-- Maintain security by storing sensitive keys in GitHub Secrets.
-- Consider tagging docker images using Git SHA or semantic versioning for better tracking.
-- Health checks in Docker Compose improve container reliability.
-- For image auto-update, **Watchtower** is a popular and easy-to-use solution, but other tools like Kubernetes operators or custom scripts can be used depending on complexity.
-- Kubernetes and ArgoCD require additional cluster setup and configuration beyond the scope of traditional Docker Compose.
-
----
-
-## References and Resources
-
-- [Todo-List-nodejs original repo](https://github.com/Ankit6098/Todo-List-nodejs)
-- [Dockerizing Node.js & MongoDB - Tutorials](https://hevodata.com/learn/docker-nodejs-mongodb/)
-- [GitHub Actions for Docker CI/CD](https://github.com/aws-actions/configure-aws-credentials)
-- [Ansible documentation](https://docs.ansible.com/)
-- [Watchtower - Automatic Docker Container Updater](https://github.com/containrrr/watchtower)
-- [Kubernetes & ArgoCD Docs](https://argo-cd.readthedocs.io/en/stable/)
-
----
+References and Resources
+Todo-List-nodejs original repo
+Dockerizing Node.js & MongoDB - Tutorials
+GitHub Actions for Docker CI/CD
+Ansible documentation
+Kubernetes & ArgoCD Docs
 
