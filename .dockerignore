@@ -2,5 +2,8 @@
 .github
 .history
 node_modules
+argocd
+ansible-setup
+k8s
 *.txt
 *.md
