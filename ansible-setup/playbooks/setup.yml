@@ -1,0 +1,77 @@
+- name: Configure EC2 instance for Kubernetes
+  hosts: all
+  become: yes
+  tasks:
+    - name: Update system packages
+      apt:
+        update_cache: yes
+        upgrade: yes
+
+    - name: Install required packages
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - docker.io
+        state: present
+
+    - name: Start and enable Docker
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add ubuntu user to docker group
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes
+
+    - name: Ensure docker group change is applied for ubuntu user
+      shell: |
+        newgrp docker <<EONG
+        id
+        EONG
+      become_user: ubuntu
+      register: docker_group_check
+      changed_when: false
+      failed_when: docker_group_check.rc != 0
+
+    - name: Install kubectl
+      get_url:
+        url: "https://dl.k8s.io/release/v1.28.0/bin/linux/amd64/kubectl"
+        dest: /usr/local/bin/kubectl
+        mode: '0755'
+
+    - name: Install kind (Kubernetes in Docker)
+      get_url:
+        url: "https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64"
+        dest: /usr/local/bin/kind
+        mode: '0755'
+
+    - name: Create kind cluster
+      shell: |
+        newgrp docker <<EONG
+        kind create cluster --name todo-cluster
+        EONG
+      become_user: ubuntu
+      register: kind_result
+      failed_when: kind_result.rc != 0 and "already exists" not in kind_result.stderr
+
+    - name: Install ArgoCD
+      shell: |
+        kubectl create namespace argocd
+        kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+        kubectl wait --for=condition=available --timeout=300s deployment/argocd-server -n argocd
+      become_user: ubuntu
+      ignore_errors: yes
+
+    - name: Install Argo Image Updater
+      shell: |
+        kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj-labs/argocd-image-updater/stable/manifests/install.yaml
+      become_user: ubuntu
+      ignore_errors: yes
+
